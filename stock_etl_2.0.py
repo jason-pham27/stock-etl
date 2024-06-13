@@ -114,6 +114,7 @@ def update_stockdata_table(stock_data: list):
 
 @flow(log_prints=True)
 def exchange_rate_etl():
+    """Extracting exchange rate data from openexchangerate.org and inserting the newly extracted data to the table 'exchange_rate'"""
     current_timestamp = datetime.now().isoformat()
     oer_data = get_exchange_rate_data(oer_appid, "VND", current_timestamp)
     update_exchange_rate_table(oer_data)
@@ -121,6 +122,7 @@ def exchange_rate_etl():
 
 @flow(log_prints=True)
 def stock_data_etl():
+    """Extracting exchange rate data from stockdata.org and inserting the newly extracted data to the table 'stock_data'"""
     current_timestamp = datetime.now().isoformat()
     tickers = ["AAPL", "TSLA", "MSFT"]
     fields_for_stockdata = ["name", "price", "day_high", "day_low"]
