@@ -125,7 +125,7 @@ def stock_data_etl():
     """Extracting exchange rate data from stockdata.org and inserting the newly extracted data to the table 'stock_data'"""
     current_timestamp = datetime.now().isoformat()
     tickers = ["AAPL", "TSLA", "MSFT"]
-    fields_for_stockdata = ["name", "price", "day_high", "day_low"]
+    fields_for_stockdata = ["ticker", "price", "day_high", "day_low"]
     stock_data = get_stockdata(stock_api_token, tickers, fields_for_stockdata, current_timestamp)
     update_stockdata_table(stock_data)
 
