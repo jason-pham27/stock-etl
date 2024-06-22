@@ -130,7 +130,8 @@ if st.sidebar.checkbox('Display full stock price table'):
         min_value=min_date,
         max_value=max_date,
         value=(min_date, max_date),
-        format="DD/MM/YYYY")
+        format="DD/MM/YYYY",
+        key='all_data_timeslider')
     
     # Display the dataframe based on the options chosen in the select box
     # The displayed dataframe is also filtered based on the time slider
@@ -155,17 +156,31 @@ st.sidebar.radio(
 # Display ticker name with min, max, and latest value of stock price
 st.subheader(st.session_state.ticker_radio)
 
+# Create a time slider for displaying overall data (min, max, current price)
+min_date = stock_df['Timestamp'].min().to_pydatetime()
+max_date = stock_df['Timestamp'].max().to_pydatetime()
+overall_data_period = st.sidebar.slider(
+    "Select date range:",
+    min_value=min_date,
+    max_value=max_date,
+    value=(min_date, max_date),
+    format="DD/MM/YYYY",
+    key='overall_data_timeslider')
+
+# Create a dataframe filtered based on the overall data time slider
+time_filtered_stock_df = stock_df[(stock_df['Timestamp'] >= overall_data_period[0]) & (stock_df['Timestamp'] <= overall_data_period[1])]
+
 # Display min, max, and latest value of stock price in 3 columns
 col1, col2, col3 = st.columns(3, gap='medium')
 col1.container(height=100).metric(
     label = ':chart_with_downwards_trend: Min Price (VND)',
-    value = min_price_ticker(stock_df, st.session_state.ticker_radio))
+    value = min_price_ticker(time_filtered_stock_df, st.session_state.ticker_radio))
 col2.container(height=100).metric(
     label = ':money_with_wings: Current Price (VND)',
-    value = current_price_ticker(stock_df, st.session_state.ticker_radio))
+    value = current_price_ticker(time_filtered_stock_df, st.session_state.ticker_radio))
 col3.container(height=100).metric(
     label = ':chart_with_upwards_trend: Max Price (VND)',
-    value = max_price_ticker(stock_df, st.session_state.ticker_radio))
+    value = max_price_ticker(time_filtered_stock_df, st.session_state.ticker_radio))
 
 st.divider()
 
