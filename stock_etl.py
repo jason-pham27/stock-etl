@@ -37,25 +37,27 @@ def get_exchange_rate_data(app_id: str, currency: str, timestamp: str) -> tuple:
 def get_stockdata(api_token: str, tickers_list: list, data_fields: list, timestamp: str) -> list:
     '''Take in the token id of your stockdata.org account, the list of tickers, and what 
     fields you want, return the list of the fields you input, plus the current datetime.'''
-
-    # create a complete api for stockdata.org
+    # create an endpoint URL to retrieve stock data
     stockdata_base_api_path = "https://api.stockdata.org/v1/data/quote"
     ticker_str = ",".join(tickers_list)
     stockdata_api = f'{stockdata_base_api_path}?symbols={ticker_str}&api_token={api_token}'
+    # attempting to get the stock data from the newly created api
+    try:
+        stock_response = requests.get(stockdata_api)
+        stock_response.raise_for_status()
+        stock_json = stock_response.json()
+        stock_data_dicts_list = stock_json["data"]
 
-    # attempt to get the json of stockdata
-    print("Requesting on stockdata.org")
-    stock_response = requests.get(stockdata_api)
-    stock_json = stock_response.json()
-    stock_data_dicts_list = stock_json["data"]
-
-    # access the dictionary of each ticker then append data of each ticker to append to the final list
-    stock_data = [
-        tuple(stock_data_dict[field] for field in data_fields) + (timestamp,)
-        for stock_data_dict in stock_data_dicts_list
-    ]
-    print("Stock data retrieved successfully")
-    return stock_data
+        # access the dictionary of each ticker then append data of each ticker to append to the final list
+        stock_data = [
+            tuple(stock_data_dict[field] for field in data_fields) + (timestamp,)
+            for stock_data_dict in stock_data_dicts_list
+        ]
+        print("Stock data retrieved successfully")
+        return stock_data
+    except requests.RequestException as e:
+        print(f'Error while fetching stock data: {e}')
+        raise
 
 
 @task
