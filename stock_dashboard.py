@@ -14,10 +14,9 @@ def merge_and_transform_table():
             - Ticker: name of the ticker (e.g.AAPL, MSFT, etc.).
             - Price (VND): the price of the ticker at the corresponding timestamp.
     """
-    conn = sqlite3.connect('stockdata.db')
-
-    stock_data_df = pd.read_sql_query("SELECT * FROM stock_data", conn)
-    exchange_rate_df = pd.read_sql_query("SELECT * FROM exchange_rate", conn)
+    with sqlite3.connect('stockdata.db') as conn:
+        stock_data_df = pd.read_sql_query("SELECT * FROM stock_data", conn)
+        exchange_rate_df = pd.read_sql_query("SELECT * FROM exchange_rate", conn)
 
     # Convert timestamp columns to datetime objects
     stock_data_df['timestamp'] = pd.to_datetime(stock_data_df['timestamp'])
@@ -37,8 +36,6 @@ def merge_and_transform_table():
     final_df = merged_df[['timestamp_stock', 'stock_name', 'price_vnd']]
     final_df['price_vnd'] = final_df['price_vnd'].round()
     final_df.columns = ['Timestamp', 'Ticker', 'Price (VND)']
-
-    conn.close()
 
     return final_df
 
