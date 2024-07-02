@@ -64,55 +64,47 @@ def get_stockdata(api_token: str, tickers_list: list, data_fields: list, timesta
 def update_exchange_rate_table(exchange_rate_data: tuple):
     '''Create a table to contain openexchangerate.org data,then insert into the table 
     the data we just get from the function get_exchange_rate_data().'''
+    with sqlite3.connect("stockdata.db") as conn:
+        cursor = conn.cursor()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS exchange_rate (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp TEXT,
+                usd_to_vnd_rate REAL
+            )''')
+        
+        cursor.execute('''
+            INSERT INTO exchange_rate (timestamp, usd_to_vnd_rate)
+            VALUES (?, ?)''', exchange_rate_data)
 
-    print("Connecting to jason_etl_project.db")
-    conn = sqlite3.connect("stockdata.db")
-    cursor = conn.cursor()
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS exchange_rate (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            timestamp TEXT,
-            usd_to_vnd_rate REAL
-        )''')
-    
-    cursor.execute('''
-        INSERT INTO exchange_rate (timestamp, usd_to_vnd_rate)
-        VALUES (?, ?)''', exchange_rate_data)
-
-    print("Inserting new values to exchange_rate table...")
-    conn.commit()
-    print("Changes to exchange_rate table committed")
-    cursor.close()
-    conn.close()
+        print("Inserting new values to exchange_rate table...")
+        conn.commit()
+        print("Changes to exchange_rate table committed")
 
 
 @task
 def update_stockdata_table(stock_data: list):
     '''Create a table to contain stockdata.org data, then insert into the table 
     the data we just get from the function get_stockdata().'''
-
-    print("Connecting to jason_etl_project.db")
-    conn = sqlite3.connect("stockdata.db")
-    cursor = conn.cursor()
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS stock_data (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            stock_name TEXT,
-            price_usd REAL,
-            day_high_usd REAL,
-            day_low_usd REAL,
-            timestamp TEXT
-        )''')
-    
-    cursor.executemany('''
-        INSERT INTO stock_data (stock_name, price_usd, day_high_usd, day_low_usd, timestamp)
-        VALUES (?, ?, ?, ?, ?)''', stock_data)
-    
-    print("Inserting new values to stock_data table...")
-    conn.commit()
-    print("Changes to stock_data table committed")
-    cursor.close()
-    conn.close()
+    with sqlite3.connect("stockdata.db") as conn:
+        cursor = conn.cursor()
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS stock_data (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                stock_name TEXT,
+                price_usd REAL,
+                day_high_usd REAL,
+                day_low_usd REAL,
+                timestamp TEXT
+            )''')
+        
+        cursor.executemany('''
+            INSERT INTO stock_data (stock_name, price_usd, day_high_usd, day_low_usd, timestamp)
+            VALUES (?, ?, ?, ?, ?)''', stock_data)
+        
+        print("Inserting new values to stock_data table...")
+        conn.commit()
+        print("Changes to stock_data table committed")
 
 
 @flow(log_prints=True)
