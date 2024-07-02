@@ -67,37 +67,31 @@ def filter_ticker(df, ticker_list: list):
     return filtered_df
 
 
-def max_price_ticker(stock_df, ticker: str):
-    "Return the maximum value of a stock price."  
-    # Filter dataframe by a ticker, then find the maximum value of the 'Price' column
+def get_price_ticker(stock_df, ticker, price_type):
+    """
+    Return the price of a stock based on the price type (min, max, or current).
+
+    Args:
+        stock_df (pd.DataFrame): Dataframe containing stock data.
+        ticker (str): Ticker symbol.
+        price_type (str): Type of price ('min', 'max', 'current').
+
+    Returns:
+        str: Formatted price.
+    """
     ticker_filtered_df = stock_df[stock_df['Ticker'] == ticker]
-    max_price = round(ticker_filtered_df['Price (VND)'].max())
-    formatted_max_price = format(max_price, ',')
-    return formatted_max_price
+    if price_type == 'min':
+        price = ticker_filtered_df['Price (VND)'].min()
+    elif price_type == 'max':
+        price = ticker_filtered_df['Price (VND)'].max()
+    elif price_type == 'current':
+        latest_timestamp = ticker_filtered_df['Timestamp'].max()
+        price = ticker_filtered_df[ticker_filtered_df['Timestamp'] == latest_timestamp]['Price (VND)'].values[0]
+    else:
+        raise ValueError("Invalid price_type. Input the correct price_type: 'min', 'max', 'current'.")
 
-
-def min_price_ticker(stock_df, ticker):
-    """Return the minimum value of a stock price."""
-    # Filter dataframe by a ticker, then find the minimum value of the 'Price' column
-    ticker_filtered_df = stock_df[stock_df['Ticker'] == ticker]
-    min_price = round(ticker_filtered_df['Price (VND)'].min())
-    formatted_min_price = format(min_price, ',')
-    return formatted_min_price
-
-
-def current_price_ticker(stock_df, ticker):
-    """Return the latest value of a stock price."""
-    # Filter dataframe by a ticker, then find the latest timestamp value
-    ticker_filtered_df = stock_df[stock_df['Ticker'] == ticker]
-    latest_timestamp = ticker_filtered_df['Timestamp'].max()
-
-    # Retrieve the 'Price' value of the row with the latest timestamp
-    current_price_series = ticker_filtered_df[ticker_filtered_df['Timestamp'] == latest_timestamp]['Price (VND)']
-
-    # Using `.values[0]` to access the value inside the pandas Series
-    current_price = round(current_price_series.values[0])
-    formatted_current_price = format(current_price, ',')
-    return formatted_current_price
+    formatted_price = format(round(price), ',')
+    return formatted_price
 
 
 # Create a full dataframe of stock data, and a dataframe for daily average stock price
@@ -171,13 +165,13 @@ time_filtered_stock_df = stock_df[(stock_df['Timestamp'] >= overall_data_period[
 col1, col2, col3 = st.columns(3, gap='medium')
 col1.container(height=100).metric(
     label = ':chart_with_downwards_trend: Min Price (VND)',
-    value = min_price_ticker(time_filtered_stock_df, st.session_state.ticker_radio))
+    value = get_price_ticker(time_filtered_stock_df, st.session_state.ticker_radio, 'min'))
 col2.container(height=100).metric(
     label = ':money_with_wings: Current Price (VND)',
-    value = current_price_ticker(time_filtered_stock_df, st.session_state.ticker_radio))
+    value = get_price_ticker(time_filtered_stock_df, st.session_state.ticker_radio, 'current'))
 col3.container(height=100).metric(
     label = ':chart_with_upwards_trend: Max Price (VND)',
-    value = max_price_ticker(time_filtered_stock_df, st.session_state.ticker_radio))
+    value = get_price_ticker(time_filtered_stock_df, st.session_state.ticker_radio, 'max'))
 
 st.divider()
 
