@@ -16,21 +16,22 @@ stock_api_token = stock_api_token_block.get()
 def get_exchange_rate_data(app_id: str, currency: str, timestamp: str) -> tuple:
     '''Take in the app id of your openexchangerates.org account and the currency to be converted,
     then return a tuple including the current datetime, and the exchange rate.'''
-
-    # create an api
+    # create an endpoint URL to retrieve exchange rate data
     oer_api_endpoint = "latest.json"
     oer_base_api_path = "https://openexchangerates.org/api/"
     oer_api = f'{oer_base_api_path}{oer_api_endpoint}?app_id={app_id}'
-
     # attempting to get the exchange rate from the newly created api
-    print('Requesting on openexchangerates.org')
-    oer_response = requests.get(oer_api)
-    oer_json = oer_response.json()
-    exchange_rate = oer_json['rates'][currency]
-    exchange_rate_data = (timestamp, exchange_rate)
-    print("Exchange rate data retrieved successfully")
-    return exchange_rate_data
-
+    try:
+        oer_response = requests.get(oer_api)
+        oer_response.raise_for_status()
+        oer_json = oer_response.json()
+        exchange_rate = oer_json['rates'][currency]
+        exchange_rate_data = (timestamp, exchange_rate)
+        print("Exchange rate data retrieved successfully")
+        return exchange_rate_data
+    except requests.RequestException as e:
+        print(f'Error while fetching exchange rate data: {e}')
+        raise
 
 @task(retries=3, retry_delay_seconds=120)
 def get_stockdata(api_token: str, tickers_list: list, data_fields: list, timestamp: str) -> list:
